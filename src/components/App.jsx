@@ -58,7 +58,7 @@ let totalHits = useRef(null)
        }
     }   
   fetch()
-  }, [name, page]);
+  }, [name, page,loading]);
 
   const reset = () => {
     setName('');
