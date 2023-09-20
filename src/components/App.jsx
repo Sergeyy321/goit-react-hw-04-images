@@ -23,10 +23,7 @@ export const App = () => {
 let totalHits = useRef(null)
   useEffect(() => {
     const fetchData = async () => {
-      if (loading !== 'pending') {
-        setLoading('pending');
-      }
- 
+    
       try {
         const imageData = await fetchGallery(name, page);
         totalHits.current = imageData.total;
@@ -55,10 +52,11 @@ let totalHits = useRef(null)
    const  fetch = (prevName, prevPage) => {
        if (name && (name !== prevName || page !== prevPage)) {
          fetchData();
+        
        }
     }   
   fetch()
-  }, [name, page,loading]);
+  }, [name, page]);
 
   const reset = () => {
     setName('');
