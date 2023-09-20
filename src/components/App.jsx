@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect,useRef } from 'react';
 import Modal from 'components/Modal/Modal';
 import { Appstyle } from './App.styled';
 import axios from 'axios';
@@ -15,21 +15,21 @@ export const App = () => {
   const [images, setImages] = useState([]);
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState('idle');
-  const [error, setError] = useState(null);
+  const [error] = useState(null);
   const [selectedImage, setSelectedImage] = useState(null);
   const [alt, setAlt] = useState(null);
 
-  let totalHits = null;
 
+let totalHits = useRef(null)
   useEffect(() => {
     const fetchData = async () => {
       if (loading !== 'pending') {
         setLoading('pending');
       }
-
+ 
       try {
         const imageData = await fetchGallery(name, page);
-        totalHits = imageData.total;
+        totalHits.current = imageData.total;
         const imagesHits = imageData.hits;
 
         if (!imagesHits.length) {
@@ -51,7 +51,8 @@ export const App = () => {
         setLoading('rejected');
       }
     };
-    fetch = (prevName, prevPage) => {
+   
+   const  fetch = (prevName, prevPage) => {
        if (name && (name !== prevName || page !== prevPage)) {
          fetchData();
        }
@@ -98,7 +99,7 @@ export const App = () => {
       {images.length > 0 && (
         <ImageGallery images={images} selectedImage={onSelectedImage} />
       )}
-      {images.length > 0 && images.length !== totalHits && (
+      {images.length > 0 && images.length !== totalHits.current && (
         <Button onLoadMore={onLoadMore} />
       )}
 
