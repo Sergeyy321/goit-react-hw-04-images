@@ -1,43 +1,43 @@
-
-import  Modal  from 'components/Modal/Modal';
-import {Appstyle} from './App.styled'
+import React, { useState, useEffect } from 'react';
+import Modal from 'components/Modal/Modal';
+import { Appstyle } from './App.styled';
 import axios from 'axios';
-import { Searchbar } from "./Searchbar/Searchbar";
-import React, { Component } from "react";
-import { ImageGallery } from "./ImageGallery/ImageGallery";
+import { Searchbar } from './Searchbar/Searchbar';
+import { ImageGallery } from './ImageGallery/ImageGallery';
 import { Loader } from './Loader/Loader';
 import { Button } from './Button/Button';
-import fetchGallery  from './Api';
-axios.defaults.baseURL = "https://pixabay.com/api"
-export class App extends Component {
-  state = {
-    name: '',
-    images: [],
-    page: 1,
-    loading: 'idle',
-    error: null,
-    selectedImage: null,
-    alt: null,
-  
-  };
-  totalHits = null;
+import fetchGallery from './Api';
 
-  async componentDidUpdate(_, prevState) {
-    const { page, name } = this.state;
-    if (prevState.name !== name || prevState.page !== page) {
-      this.setState({ loading: 'pending' });
+axios.defaults.baseURL = 'https://pixabay.com/api';
+
+export const App = () => {
+  const [name, setName] = useState('');
+  const [images, setImages] = useState([]);
+  const [page, setPage] = useState(1);
+  const [loading, setLoading] = useState('idle');
+  const [error, setError] = useState(null);
+  const [selectedImage, setSelectedImage] = useState(null);
+  const [alt, setAlt] = useState(null);
+
+  let totalHits = null;
+
+  useEffect(() => {
+    const fetchData = async () => {
+      if (loading !== 'pending') {
+        setLoading('pending');
+      }
 
       try {
         const imageData = await fetchGallery(name, page);
-        this.totalHits = imageData.total;
+        totalHits = imageData.total;
         const imagesHits = imageData.hits;
+
         if (!imagesHits.length) {
           alert('No results were found.');
         }
-        this.setState(({ images }) => ({
-          images: [...images, ...imagesHits],
-          loading: 'resolved',
-        }));
+
+        setImages(prevImages => [...prevImages, ...imagesHits]);
+        setLoading('resolved');
 
         if (page > 1) {
           const CARD_HEIGHT = 300;
@@ -47,69 +47,69 @@ export class App extends Component {
           });
         }
       } catch (error) {
-        alert({ error });
-        this.setState({ loading: 'rejected' });
+        alert(error);
+        setLoading('rejected');
       }
-    }
-  }
-  reset = () => {
-    this.setState({
-      name: '',
-      page: 1,
-      images: [],
-      selectedImage: null,
-      alt: null,
-      loading: 'idle',
-    });
+    };
+    fetch = (prevName, prevPage) => {
+       if (name && (name !== prevName || page !== prevPage)) {
+         fetchData();
+       }
+    }   
+  fetch()
+  }, [name, page]);
+
+  const reset = () => {
+    setName('');
+    setPage(1);
+    setImages([]);
+    setSelectedImage(null);
+    setAlt(null);
+    setLoading('idle');
   };
-  onFormSubmit = name => {
-    if (this.state.name === name) {
+
+  const onFormSubmit = el => {
+    if (name === el) {
       return;
     }
-    this.reset();
-    this.setState({ name });
+    reset();
+    setName(el);
   };
 
-  onModalClose = () => {
-    this.setState({
-      selectedImage: null,
-      showModal: false,
-    });
-  };
-  onLoadMore = () => {
-    this.setState(prevState => ({
-      page: prevState.page + 1,
-    }));
-  };
-  onSelectedImage = (largeImageUrl, tags) => {
-    this.setState({
-      selectedImage: largeImageUrl,
-      alt: tags,
-    });
+  const onModalClose = () => {
+    setSelectedImage(null);
+    setAlt(null);
   };
 
-  render() {
-    const { images, error, loading, selectedImage, alt } = this.state;
-    return (
-      <Appstyle>
-        <Searchbar onSubmit={this.onFormSubmit} />
-        {loading === 'pending' && <Loader />}
-        {error && <h1>{error.message}</h1>}
-        {images.length > 0 && (
-          <ImageGallery images={images} selectedImage={this.onSelectedImage} />
-        )}
-        {images.length > 0 && images.length !== this.totalHits && (
-          <Button onLoadMore={this.onLoadMore} />
-        )}
+  const onLoadMore = () => {
+    setPage(prevPage => prevPage + 1);
+  };
 
-        {selectedImage && (
-          <Modal
-            onModalClose={this.onModalClose}
-            selectedImage={selectedImage}
-            tags={alt}
-          />
-        )}
-      </Appstyle>
-    );
-  }
+  const onSelectedImage = (largeImageUrl, tags) => {
+    setSelectedImage(largeImageUrl);
+    setAlt(tags);
+  };
+
+  return (
+    <Appstyle>
+      <Searchbar onSubmit={onFormSubmit} />
+      {loading === 'pending' && <Loader />}
+      {error && <h1>{error.message}</h1>}
+      {images.length > 0 && (
+        <ImageGallery images={images} selectedImage={onSelectedImage} />
+      )}
+      {images.length > 0 && images.length !== totalHits && (
+        <Button onLoadMore={onLoadMore} />
+      )}
+
+      {selectedImage && (
+        <Modal
+          onModalClose={onModalClose}
+          selectedImage={selectedImage}
+          tags={alt}
+        />
+      )}
+    </Appstyle>
+  );
 };
+
